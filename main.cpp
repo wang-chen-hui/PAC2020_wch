@@ -16,14 +16,16 @@ typedef complex<double> Complex;
 typedef chrono::high_resolution_clock Clock;
 
 const int m=1638400;	// DO NOT CHANGE!!
-const int K=1000;	// DO NOT CHANGE!!
+const int K=5000;	// DO NOT CHANGE!!
 
-double logDataVSPrior(const Complex* dat, const Complex* pri, const double* ctf, const double* sigRcp, const int num, const double disturb0);
+double logDataVSPrior(const double* datre, const double* prire, const double* datunre, const double* priunre, const double* ctf, const double* sigRcp, const int num, const double disturb0);
 void checkfunction(const int K,const double* res);
 int main ( int argc, char *argv[] )
 { 
-    Complex *dat = new Complex[m];
-    Complex *pri = new Complex[m];
+    double *datre = new double[m];
+    double *prire = new double[m];
+    double *datunre = new double[m];
+    double *priunre = new double[m];
     double *ctf = new double[m];
     double *sigRcp = new double[m];
     double *disturb = new double[K];
@@ -45,8 +47,10 @@ int main ( int argc, char *argv[] )
     while( !fin.eof() ) 
     {
         fin >> dat0 >> dat1 >> pri0 >> pri1 >> ctf0 >> sigRcp0;
-        dat[i] = Complex (dat0, dat1);
-        pri[i] = Complex (pri0, pri1);
+        datre[i] = dat0;
+        prire[i] = pri0;
+        datunre[i] = dat1;
+        priunre[i] = pri1;
         ctf[i] = ctf0;
         sigRcp[i] = sigRcp0;
         i++;
@@ -84,7 +88,7 @@ int main ( int argc, char *argv[] )
 
     for(unsigned int t = 0; t < K; t++)
     {
-        double result = logDataVSPrior(dat, pri, ctf, sigRcp, m, disturb[t]);
+        double result = logDataVSPrior(datre, prire,datunre,priunre,ctf, sigRcp, m, disturb[t]);
         results[t] = result;
         fout << t+1 << ": " << result << endl;
     }
@@ -98,8 +102,11 @@ int main ( int argc, char *argv[] )
 
     cout << "Computing time=" << compTime.count() << " microseconds" << endl;
 
-    delete[] dat;
-    delete[] pri;
+    delete[] datre;
+    delete[] prire;
+    delete[] datunre;
+    delete[] priunre;
+
 
     delete[] ctf;
     delete[] sigRcp;
@@ -108,13 +115,15 @@ int main ( int argc, char *argv[] )
     return EXIT_SUCCESS;
 }
 
-double logDataVSPrior(const Complex* dat, const Complex* pri, const double* ctf, const double* sigRcp, const int num, const double disturb0)
+double logDataVSPrior(const double* datre, const double* prire, const double* datunre, const double* priunre, const double* ctf, const double* sigRcp, const int num, const double disturb0)
 {
     double result = 0.0;
     #pragma omp parallel for reduction(+:result),schedule(static,num/omp_get_num_threads())
     for (int i = 0; i < num; i++)
     {
-        result += ( norm( dat[i] - ctf[i] * pri[i] ) * sigRcp[i] );
+        double retmp = datre[i] - ctf[i] * prire[i];
+        double unretmp = datunre[i] - ctf[i] * priunre[i];
+        result += ( (retmp * retmp + unretmp * unretmp ) * sigRcp[i] );
     }
     return result*disturb0;
 }

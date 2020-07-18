@@ -1,15 +1,14 @@
 CC	= g++
 CFLAGS	= -std=c++11 -pg -O2 -fopenmp -ftree-vectorizer-verbose=3 -mavx -mfpmath=sse -floop-optimize
-
+LIB_PATH = /mnt/d/PAC2020/PAC2020_wch/libcheckresult.so
 all: logVS
 
-logVS: main.o check_result.o
-	$(CC) -o $@ $^ $(CFLAGS)
+logVS: main.o
+	$(CC) -o $@ $^ $(CFLAGS) ${LIB_PATH}
 
 main.o: main.cpp
 	$(CC) -c $(CFLAGS) $<
-check_result.o: check_result.cpp
-	$(CC) -c $(CFLAGS) $<
+	
 .PHONY: clean
 
 clean: 
