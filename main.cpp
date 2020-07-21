@@ -119,11 +119,11 @@ double logDataVSPrior(const COMPLEX* dat, const COMPLEX* pri, const double* ctf,
     #pragma omp parallel for reduction(+:result),schedule(static,num/omp_get_num_threads())
     for (int i = 0; i <num; i++)
     {
-        double retmp = dat->re[i] - ctf[i] * pri->re[i];
-        double unretmp = dat->unre[i] - ctf[i] * pri->unre[i];
+        double retmp = dat->re[i] - disturb0 * ctf[i] * pri->re[i];
+        double unretmp = dat->unre[i] - disturb0 * ctf[i] * pri->unre[i];
         result += ( (retmp * retmp + unretmp * unretmp ) * sigRcp[i] );
     }
-    return result*disturb0;
+    return result;
 }
 
 void checkfunction(const int K,const double* res)
